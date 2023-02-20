@@ -189,19 +189,23 @@ public class CapacitorHttpUrlConnection implements ICapacitorHttpUrlConnection {
             this.writeRequestBody(dataString.toString());
         } else if (contentType.contains("application/x-www-form-urlencoded")) {
             StringBuilder builder = new StringBuilder();
+            try {
+                JSObject obj = body.toJSObject();
+                Iterator<String> keys = obj.keys();
+                while (keys.hasNext()) {
+                    String key = keys.next();
+                    Object d = obj.get(key);
+                    builder.append(key).append("=").append(URLEncoder.encode(d.toString(), "UTF-8"));
 
-            JSObject obj = body.toJSObject();
-            Iterator<String> keys = obj.keys();
-            while (keys.hasNext()) {
-                String key = keys.next();
-                Object d = obj.get(key);
-                builder.append(key).append("=").append(URLEncoder.encode(d.toString(), "UTF-8"));
-
-                if (keys.hasNext()) {
-                    builder.append("&");
+                    if (keys.hasNext()) {
+                        builder.append("&");
+                    }
                 }
+                this.writeRequestBody(builder.toString());
+            }            
+            catch (Exception ex) {
+                this.writeRequestBody(body.toString());
             }
-            this.writeRequestBody(builder.toString());
         } else if (contentType.contains("multipart/form-data")) {
             FormUploader uploader = new FormUploader(connection);
 
